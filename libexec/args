@@ -5,6 +5,7 @@ interpret_args() {
   verbose
   version
   strategies
+  force_deploy
 }
 
 # Run in verbose mode
@@ -42,5 +43,13 @@ strategies() {
   if [[ $ARGS =~ (-s|--strategies) ]]; then
     echo "$STRATEGIES"
     exit 0
+  fi
+}
+
+# Force a deploy even if revisions are the same.
+#
+force_deploy() {
+  if [[ $ARGS =~ (-f|--force) ]]; then
+    FORCE=true
   fi
 }

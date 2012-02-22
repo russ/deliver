@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+run() {
+  __run "check" "Checking repository"
+  __run "push" "Pushing new commits"
+  if [[ $FORCE ]]; then
+    echo "Forcing deploy"
+  else
+    __run "check_for_updates" "Checking for updates"
+  fi
+  __run "setup" "Setting up app"
+  # __run "launch" "Launching app"
+}
+
+# Ensure remote repository is set up correctly,
+# And that we have a local remote pointing to it
+#
+check() {
+  ssh $REMOTE "
+    set -e
+    if [ ! -d $DELIVER_TO ]; then
+      mkdir $DELIVER_TO
+      cd $DELIVER_TO
+      git init $SILENCE
+      git config receive.denyCurrentBranch ignore
+    fi
+  "
+  if [[ ! $(git remote -v) =~ "$REMOTE:$DELIVER_TO" ]]; then
+    [[ $(git remote -v) =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
+    git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
+  fi
+}
+
+# Push all commits to remote repository
+#
+push() {
+  __exec "git push deliver master"
+}
+
+# Check to see if local revision matches remote revision.
+#
+check_for_updates() {
+  local_revision=$(git rev-parse HEAD)
+  remote_revision=$(git ls-remote $DELIVER_REMOTE | awk '{ print $1 }' | head -n 1)
+
+  if [[ $local_revision = $remote_revision ]]; then
+    if [ $VERBOSE ]; then
+      echo "Latest deployed version ($remote_revision) is the same as local revision ($local_revision)"
+    fi
+    error "LATEST DEPLOYED"
+  fi
+}
+
+
+# Install/update all gems via bundler
+#
+setup() {
+  ssh $REMOTE "
+    set -e
+    . .profile
+    cd $DELIVER_TO $SILENCE
+    git reset --hard master $SILENCE
+    cd $DELIVER_TO $SILENCE
+    bundle install --deployment --without development test $SILENCE
+  "
+}
+
+# Start the app via upstart
+#
+launch() {
+  for server in $(echo $SERVERS | tr ";" "\n")
+  do
+    ssh $server "
+      set -e
+      if [ $VERBOSE ]; then
+        sudo sv restart $APP-eb-1
+      else
+        sudo sv restart $APP-eb-1 > /dev/null
+      fi
+    "
+  done
+}

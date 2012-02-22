@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+STRATEGY="runit"
+
+APP="medusa"              # You know, the shipit one
+
+USER="$APP"               # Can be anything really, but it would be nice if you
+                          # stuck to this convention
+
+DELIVER_REMOTE="deliver"  # The name of the remote repository where this app
+                          # will be delivered to
+
+DELIVER_TO="~$USER/app"   # The location where this app will be 'git pushed' to
+
+SERVERS="shipit;shipit2"  # The hostname(s) or IP(s) where this app will be delivered
+
+REMOTE="$USER@shipit"     # You will be performing most remote tasks as this user,
+                          # e.g. git pushing, bundling etc.
+                          # Tasks requiring sudo privileges will be performed as
+                          # your local user
