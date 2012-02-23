@@ -2,14 +2,14 @@
 
 run() {
   __run "check" "Checking repository"
-  __run "push" "Pushing new commits"
   if [[ $FORCE ]]; then
     echo "Forcing deploy"
   else
     __run "check_for_updates" "Checking for updates"
   fi
+  __run "push" "Pushing new commits"
   __run "setup" "Setting up app"
-  # __run "launch" "Launching app"
+  __run "launch" "Launching app"
 }
 
 # Ensure remote repository is set up correctly,
