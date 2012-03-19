@@ -9,6 +9,7 @@ run() {
   fi
   __run "push" "Pushing new commits"
   __run "setup" "Setting up app"
+  __run "pre_run" "Pre run tasks"
   __run "launch" "Launching app"
 }
 
@@ -62,6 +63,17 @@ setup() {
     git reset --hard master $SILENCE
     cd $DELIVER_TO $SILENCE
     bundle install --deployment --without development test $SILENCE
+  "
+}
+
+# Run any tasks before booting the app
+#
+pre_run() {
+  ssh $REMOTE "
+    set -e
+    . .profile
+    cd $DELIVER_TO $SILENCE
+    $PRE_RUN
   "
 }
 
